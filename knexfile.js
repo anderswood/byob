@@ -7,6 +7,13 @@ module.exports = {
     useNullAsDefault: true,
     migrations: { directory: './db/migrations' },
     seeds: { directory: './db/seeds/dev' }
+  },
+  testing: {
+    client: 'pg',
+    connection: process.env.DATABASE_URL || 'postgress://localhost/byob_test',
+    useNullAsDefault: true,
+    migrations: { directory: './db/migrations' },
+    seeds: { directory: './db/seeds/test' }
   }
 
 };
