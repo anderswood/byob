@@ -15,7 +15,6 @@ const fuelCodeLegend = {
 
 const E85Station = {
   station_code: 41733,
-  fuel_type_code: 'E85',
   station_name: "Veterans Affairs - Maine Healthcare System - Togus",
   zip: 04330,
   state: 'ME',
@@ -27,7 +26,6 @@ const E85Station = {
 };
 const ElecStation1 = {
   station_code: 44280,
-  fuel_type_code: 'ELEC',
   station_name: "Lee Nissan of Auburn",
   zip: 04210,
   state: 'ME',
@@ -39,7 +37,6 @@ const ElecStation1 = {
 };
 const ElecStation2 = {
   station_code: 48404,
-  fuel_type_code: 'ELEC',
   station_name: "ReVision Energy",
   zip: 04103,
   state: 'ME',
@@ -51,7 +48,6 @@ const ElecStation2 = {
 };
 const BDStation = {
   station_code: 48463,
-  fuel_type_code: 'BD',
   station_name: "Acadia National Park - Bar Harbor Fuel System",
   zip: 04609,
   state: 'ME',
@@ -63,7 +59,6 @@ const BDStation = {
 };
 const CNGStation = {
   station_code: 61679,
-  fuel_type_code: 'CNG',
   station_name: "Bangor Natural Gas ",
   zip: 04401,
   state: 'ME',
@@ -75,7 +70,6 @@ const CNGStation = {
 };
 const LPGStation1 = {
   station_code: 62740,
-  fuel_type_code: 'LPG',
   station_name: "U-Haul",
   zip: 04101,
   state: 'ME',
@@ -87,7 +81,6 @@ const LPGStation1 = {
 };
 const LPGStation2 = {
   station_code: 63965,
-  fuel_type_code: 'LPG',
   station_name: "Bob's Cash Fuel Inc",
   zip: 04950,
   state: 'ME',
@@ -116,13 +109,13 @@ const processStationData = Data => {
       fuel_type_code: 'HY',
       fuel_type: 'Hydrogen',
       count: 0,
-      stations: [{}]
+      stations: []
     },
     {
       fuel_type_code: 'LNG',
       fuel_type: 'Liquefied Natural Gas',
       count: 0,
-      stations: [{}]
+      stations: []
     },
     {
       fuel_type_code: 'BD',
@@ -156,11 +149,10 @@ const createFuelType = (knex, fuel) => {
   .then(fuelTypesId => {
     let fuelStationPromises = [];
 
-    fuel.stations.forEach( (station, i) => {
+    fuel.stations.forEach( (station) => {
       fuelStationPromises.push(
         createFuelStation(knex, {
-          station_code: station.id,
-          fuel_type_code: station.fuel_type_code,
+          station_code: station.station_code,
           station_name: station.station_name,
           zip: station.zip,
           state: station.state,

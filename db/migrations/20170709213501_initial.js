@@ -13,7 +13,6 @@ exports.up = function(knex, Promise) {
       table.integer('fuel_type_id').unsigned();
       table.foreign('fuel_type_id').references('fuel_types.id');
       table.integer('station_code');
-      table.string('fuel_type_code');
       table.string('station_name');
       table.string('zip');
       table.string('state');

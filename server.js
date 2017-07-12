@@ -8,7 +8,7 @@ const database = require('knex')(configuration);
 
 app.set('port', process.env.PORT || 3000);
 
-app.use(express.static(`${__dirname}`));
+app.use(express.static(`${__dirname}/`));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -16,18 +16,30 @@ app.use(bodyParser.urlencoded({extended: true}));
 // GET /api/v1/fuels
 app.get('/api/v1/fuels', (req, res) => {
   database('fuel_types').select()
-    .then( fuels => {
-      if (fuels.length) {
-        res.status(200).json(fuels);
-      } else {
-        res.status(404).json({
-          error: 'No fuels were found'
-        });
-      };
-    });
+  .then( fuels => {
+    if (fuels.length) {
+      res.status(200).json(fuels);
+    } else {
+      res.status(404).json({
+        error: 'No fuels were found'
+      });
+    };
+  });
 });
 
 // GET /api/v1/stations
+app.get('/api/v1/stations', (req, res) => {
+  database('fuel_stations').select()
+  .then( stations => {
+    if(stations.length) {
+      res.status(200).json(stations);
+    } else {
+      res.status(404).json({
+        error: 'No stations found'
+      });
+    };
+  });
+});
 
 // GET /api/v1/stations/:id
 
@@ -56,3 +68,5 @@ if (!module.parent) {
     console.log(`server is running on port ${app.get('port')}`);
   })
 }
+
+module.exports = app;
