@@ -48,7 +48,6 @@ const createFuelType = (knex, fuel) => {
       fuelStationPromises.push(
         createFuelStation(knex, {
           station_code: station.id,
-          fuel_type_code: station.fuel_type_code,
           station_name: station.station_name,
           zip: station.zip,
           state: station.state,
