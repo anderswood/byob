@@ -174,7 +174,7 @@ describe('API Routes', () => {
   });
 
   describe('POST /api/v1/stations', () => {
-    let reqBody = {
+    var reqBody = {
       id: 333,
       station_code: 12345,
       station_name: "Ron's Cash Fuel Inc",
@@ -214,7 +214,7 @@ describe('API Routes', () => {
     });
 
     it('should not add a new station if the fuel_type_code is invalid', done => {
-      let = reqBody2 = {
+      var = reqBody2 = {
         id: 333,
         station_code: 12345,
         station_name: "Ron's Cash Fuel Inc",
