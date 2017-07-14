@@ -1,17 +1,17 @@
 // api docs: https://developer.nrel.gov/docs/transportation/alt-fuel-stations-v1/all/
 // api url: https://developer.nrel.gov/api/alt-fuel-stations/v1.json?api_key=k1onvU04gZwHtHoFt5FkecebH1URhP2aTxaBgez4&state=ME
-const stationData = require('../ME-list.json');
+// const stationData = require('../ME-list.json');
 
-const fuelsArr = Object.keys(stationData.station_counts.fuels);
-const fuelCodeLegend = {
-  BD: 'Biodiesel (B20 and above)',
-  CNG: 'Compressed Natural Gas',
-  E85: 'Ethanol (E85)',
-  ELEC: 'Electric',
-  HY: 'Hydrogen',
-  LNG: 'Liquefied Natural Gas',
-  LPG: 'Liquefied Petroleum Gas (Propane)'
-}
+// const fuelsArr = Object.keys(stationData.station_counts.fuels);
+// const fuelCodeLegend = {
+//   BD: 'Biodiesel (B20 and above)',
+//   CNG: 'Compressed Natural Gas',
+//   E85: 'Ethanol (E85)',
+//   ELEC: 'Electric',
+//   HY: 'Hydrogen',
+//   LNG: 'Liquefied Natural Gas',
+//   LPG: 'Liquefied Petroleum Gas (Propane)'
+// }
 
 const E85Station = {
   id: 1,
@@ -98,7 +98,7 @@ const LPGStation2 = {
   geocode_status: "GPS"
 };
 
-const processStationData = Data => {
+const processStationData = () => {
   let fuelDataProcessed = [
     {
       id: 11,
@@ -193,7 +193,7 @@ const createFuelStation = (knex, station) => {
 };
 
 exports.seed = (knex, Promise) => {
-  let fuelDataProcessed = processStationData(stationData)
+  let fuelDataProcessed = processStationData()
 
   return knex('fuel_stations').del()
   .then( () => knex('fuel_types').del())

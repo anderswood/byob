@@ -17,9 +17,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('port', process.env.PORT || 3000);
 
 
-///////////////////////////////
-//********* JWT *********//
-///////////////////////////////
+// /////////////////////////////
+// ********* JWT ********* //
+// /////////////////////////////
 
 app.set('secretKey', process.env.CLIENT_SECRET);
 if (!process.env.CLIENT_SECRET || !process.env.USERNAME || !process.env.PASSWORD) {
@@ -42,9 +42,9 @@ app.post('/authenticate', (req, res) => {
     res.json({
       success: true,
       username: user.username,
-      token: token
+      token
     });
-  };
+  }
 
 });
 
@@ -70,7 +70,7 @@ const checkAuth = (req, res, next) => {
       success: false,
       message: 'You must be authorized to hit this endpoint'
     });
-  };
+  }
 };
 
 ///////////////////////////////
@@ -86,29 +86,29 @@ app.get('/api/v1/fuels', (req, res) => {
       res.status(404).json({
         error: 'No fuels were found'
       });
-    };
+    }
   });
 });
 
 app.get('/api/v1/stations/fuels/:fuel_type_code', (req, res) => {
   database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).select()
   .then( fuel => {
-    if(fuel.length) {
+    if (fuel.length) {
       database('fuel_stations').where('fuel_type_id', fuel[0].id).select()
       .then( stations => {
-        if(stations.length) {
+        if (stations.length) {
           res.status(200).json(stations);
         } else {
           res.status(404).json({
             error: `Could not locate stations with fuel_type_code ${req.params.fuel_type_code}`
           });
-        };
+        }
       });
     } else {
       res.status(404).json({
         error: `Could not locate fuel id with fuel_type_code ${req.params.fuel_type_code}`
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error })
@@ -118,13 +118,13 @@ app.get('/api/v1/stations/fuels/:fuel_type_code', (req, res) => {
 app.get('/api/v1/stations', (req, res) => {
   database('fuel_stations').select()
   .then( stations => {
-    if(stations.length) {
+    if (stations.length) {
       res.status(200).json(stations);
     } else {
       res.status(404).json({
         error: 'No stations found'
       });
-    };
+    }
   });
 });
 
@@ -137,7 +137,7 @@ app.get('/api/v1/stations/:station_code', (req, res) => {
       res.status(404).json({
         error: `Could not locate station with id ${req.params.station_code}`
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error })
@@ -145,7 +145,7 @@ app.get('/api/v1/stations/:station_code', (req, res) => {
 });
 
 app.post('/api/v1/stations', checkAuth, (req, res) => {
-  for (let requiredParam of ['station_code', 'station_name', 'zip', 'state', 'city', 'street_address', 'latitude', 'longitude', 'geocode_status','fuel_type_code']) {
+  for (let requiredParam of ['station_code', 'station_name', 'zip', 'state', 'city', 'street_address', 'latitude', 'longitude', 'geocode_status', 'fuel_type_code']) {
     if (!req.body[requiredParam]) {
       return res.status(422).json({
         error: `Expected format:
@@ -163,13 +163,13 @@ app.post('/api/v1/stations', checkAuth, (req, res) => {
         }
         You are missing a ${requiredParam} property.`
       });
-    };
-  };
+    }
+  }
 
   delete req.body.token
   database('fuel_types').where('fuel_type_code', req.body.fuel_type_code).select()
   .then( fuel => {
-    if(fuel.length) {
+    if (fuel.length) {
       req.body.fuel_type_id = fuel[0].id;
       delete req.body.fuel_type_code;
       database('fuel_stations').insert(req.body, 'id')
@@ -183,7 +183,7 @@ app.post('/api/v1/stations', checkAuth, (req, res) => {
       res.status(404).json({
         error: `Could not locate fuel id with fuel_type_code ${req.body.fuel_type_code}`
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error });
@@ -197,8 +197,8 @@ app.post('/api/v1/fuels', checkAuth, (req, res) => {
       return res.status(422).json({
         error: `Expected format: { fuel_type_code: <string>, fuel_type: <string>, count: <integer> } You are missing a ${requiredParam} property.`
       });
-    };
-  };
+    }
+  }
   delete req.body.token
   database('fuel_types').insert(req.body, 'id')
   .then(fuel => {
@@ -212,7 +212,7 @@ app.post('/api/v1/fuels', checkAuth, (req, res) => {
 app.patch('/api/v1/fuels/:fuel_type_code/count/:count', checkAuth, (req, res) => {
   database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).select()
   .then( fuel => {
-    if(!fuel.length) {
+    if (!fuel.length) {
       return res.status(404).json({
         error: `Could not locate fuel with fuel_type_code ${req.params.fuel_type_code}`
       })
@@ -223,9 +223,9 @@ app.patch('/api/v1/fuels/:fuel_type_code/count/:count', checkAuth, (req, res) =>
           res.status(201).json({ response: `Count successfully updated for ${req.params.fuel_type_code}`});
         } else {
           res.status()
-        };
+        }
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error });
@@ -235,7 +235,7 @@ app.patch('/api/v1/fuels/:fuel_type_code/count/:count', checkAuth, (req, res) =>
 app.patch('/api/v1/stations/:station_code/latitude/:new_lat', checkAuth, (req, res) => {
   database('fuel_stations').where('station_code', req.params.station_code).select()
   .then( station => {
-    if(!station.length) {
+    if (!station.length) {
       return res.status(404).json({
         error: `Could not locate station with station_code ${req.params.station_code}`
       })
@@ -246,9 +246,9 @@ app.patch('/api/v1/stations/:station_code/latitude/:new_lat', checkAuth, (req, r
           res.status(201).json({ response: `Latitude successfully updated for station ${req.params.station_code}`});
         } else {
           res.status()
-        };
+        }
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error });
@@ -264,7 +264,7 @@ app.delete('/api/v1/stations/:station_code', checkAuth, (req, res) => {
       res.status(404).json({
         error: `Could not locate station with code ${req.params.station_code}`
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error })
@@ -275,22 +275,22 @@ app.delete('/api/v1/stations/:station_code', checkAuth, (req, res) => {
 app.delete('/api/v1/stations/fuels/:fuel_type_code', checkAuth, (req, res) => {
   database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).select()
   .then( fuel => {
-    if(fuel.length) {
+    if (fuel.length) {
       database('fuel_stations').where('fuel_type_id', fuel[0].id).del()
       .then( qtyRowDel => {
-        if(qtyRowDel) {
+        if (qtyRowDel) {
           res.status(204).json({ rowDel: qtyRowDel });
         } else {
           res.status(404).json({
             error: `Could not locate any stations with fuel code ${req.params.fuel_type_code}`
           });
-        };
+        }
       });
     } else {
       res.status(404).json({
         error: `Could not locate fuel with code ${req.params.fuel_type_code}`
       });
-    };
+    }
   })
   .catch( error => {
     res.status(500).json({ error })

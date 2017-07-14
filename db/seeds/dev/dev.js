@@ -13,7 +13,7 @@ const fuelCodeLegend = {
   LPG: 'Liquefied Petroleum Gas (Propane)'
 }
 
-const processStationData = Data => {
+const processStationData = () => {
   let fuelDataProcessed = [];
 
   fuelsArr.forEach((fuel, i) => {
@@ -25,9 +25,9 @@ const processStationData = Data => {
     })
 
     stationData.fuel_stations.forEach( station => {
-      if(station.fuel_type_code === fuel) {
+      if (station.fuel_type_code === fuel) {
         fuelDataProcessed[i].stations.push(station);
-      };
+      }
     });
 
   });
@@ -71,7 +71,7 @@ const createFuelStation = (knex, station) => {
 };
 
 exports.seed = (knex, Promise) => {
-  let fuelDataProcessed = processStationData(stationData)
+  let fuelDataProcessed = processStationData()
 
   return knex('fuel_stations').del()
   .then( () => knex('fuel_types').del())
