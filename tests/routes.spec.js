@@ -141,6 +141,33 @@ describe('API Routes', () => {
         done();
       });
     });
+
+    it('should return all the stations with city Augusta for custom search', done => {
+      chai.request(server)
+      .get('/api/v1/stations/?city=Portland')
+      .end((err, res) => {
+        res.body.sort((a, b) => a.id - b.id);
+        res.body.length.should.equal(2);
+        res.body[0].station_code.should.equal(48404);
+        res.body[0].station_name.should.equal('ReVision Energy');
+        res.body[0].zip.should.equal('04103');
+        res.should.have.status(200);
+        res.should.be.json;
+        done();
+      });
+    });
+
+    it('should return error and 404 if custom search comes up empty', done => {
+      chai.request(server)
+      .get('/api/v1/stations/?city=Oz')
+      .end((err, res) => {
+        res.body.error.should.equal('No stations found corresponding to city Oz');
+        res.should.have.status(404);
+        res.should.be.json;
+        done();
+      });
+    });
+
   });
 
   describe('GET /api/v1/stations/:station_code', () => {

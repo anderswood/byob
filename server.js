@@ -116,16 +116,31 @@ app.get('/api/v1/stations/fuels/:fuel_type_code', (req, res) => {
 });
 
 app.get('/api/v1/stations', (req, res) => {
-  database('fuel_stations').select()
-  .then( stations => {
-    if (stations.length) {
-      res.status(200).json(stations);
-    } else {
-      res.status(404).json({
-        error: 'No stations found'
-      });
-    }
-  });
+  let prop = Object.keys(req.query)
+
+  if (prop.length) {
+    database('fuel_stations').where(prop[0], req.query[prop[0]]).select()
+    .then( stations => {
+      if (stations.length) {
+        res.status(200).json(stations);
+      } else {
+        res.status(404).json({
+          error: `No stations found corresponding to ${prop[0]} ${req.query[prop[0]]}`
+        });
+      }
+    });
+  } else {
+    database('fuel_stations').select()
+    .then( stations => {
+      if (stations.length) {
+        res.status(200).json(stations);
+      } else {
+        res.status(404).json({
+          error: 'No stations found'
+        });
+      }
+    });
+  }
 });
 
 app.get('/api/v1/stations/:station_code', (req, res) => {
