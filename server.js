@@ -21,7 +21,7 @@ app.set('port', process.env.PORT || 3000);
 //********* JWT *********//
 ///////////////////////////////
 
-app.set('secretKey', config.CLIENT_SECRET);
+app.set('secretKey', process.env.CLIENT_SECRET);
 if (!process.env.CLIENT_SECRET || !config.USERNAME || !config.PASSWORD) {
   throw 'Make sure you have a CLIENT_SECRET, USERNAME, and PASSWORD in your .env file'
 }
