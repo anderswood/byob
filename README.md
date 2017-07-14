@@ -32,14 +32,14 @@ GET **/api/v1/stations**
 * Custom queries: filter on any one column in the station table, e.g. `/api/v1/stations/?city=Bar%20Harbor` returns all stations in Bar Harbor, and `/api/v1/stations/?zip=04330` returns all stations at zip code 04330. Column headings and example data points for reference:
 ```
 station_code: 41733,
-station_name: "Veterans Affairs - Maine Healthcare System - Togus",
+station_name: 'Veterans Affairs - Maine Healthcare System - Togus',
 zip: '04330',
 state: 'ME',
-city: "Augusta",
-street_address: "1 VA Center",
+city: 'Augusta',
+street_address: '1 VA Center',
 latitude: '44.296869',
 longitude: '-69.724097',
-geocode_status: "GPS"
+geocode_status: 'GPS'
 ```
 
 GET **/api/v1/stations/:station_code**

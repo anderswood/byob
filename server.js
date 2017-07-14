@@ -3,8 +3,8 @@ const app = express();
 const bodyParser = require('body-parser');
 
 const jwt = require('jsonwebtoken');
-// const dotenv = require('dotenv');
-// const config = dotenv.config().parsed;
+const dotenv = require('dotenv');
+const config = dotenv.config().parsed;
 
 const environment = process.env.NODE_ENV || 'development';
 const configuration = require('./knexfile')[environment];
