@@ -2,18 +2,81 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+const config = dotenv.config().parsed;
+
 const environment = process.env.NODE_ENV || 'development';
 const configuration = require('./knexfile')[environment];
 const database = require('knex')(configuration);
-
-app.set('port', process.env.PORT || 3000);
 
 app.use(express.static(`${__dirname}/`));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-// 4 GET
-// GET /api/v1/fuels
+app.set('port', process.env.PORT || 3000);
+
+
+///////////////////////////////
+//********* JWT *********//
+///////////////////////////////
+
+app.set('secretKey', config.CLIENT_SECRET);
+if (!config.CLIENT_SECRET || !config.USERNAME || !config.PASSWORD) {
+  throw 'Make sure you have a CLIENT_SECRET, USERNAME, and PASSWORD in your .env file'
+}
+
+app.post('/authenticate', (req, res) => {
+  const user = req.body;
+
+  if (user.username !== config.USERNAME || user.password !== config.PASSWORD) {
+    res.status(403).send({
+      success: false,
+      message: 'Invalid Credentials'
+    });
+  } else {
+    let token = jwt.sign(user, app.get('secretKey'), {
+      expiresIn: 3.154e+7 // expires in 1 year
+    });
+
+    res.json({
+      success: true,
+      username: user.username,
+      token: token
+    });
+  };
+
+});
+
+const checkAuth = (req, res, next) => {
+  const token = req.body.token ||
+                req.params.token ||
+                req.headers['authorization'];
+
+  if (token) {
+    jwt.verify(token, app.get('secretKey'), (error, decoded) => {
+      if (error) {
+        return res.status(403).send({
+          success: false,
+          message: 'Invalid authorization token.'
+        });
+      } else {
+        req.decoded = decoded;
+        next();
+      }
+    });
+  } else {
+    return res.status(403).send({
+      success: false,
+      message: 'You must be authorized to hit this endpoint'
+    });
+  };
+};
+
+///////////////////////////////
+//********* ROUTES *********//
+///////////////////////////////
+
 app.get('/api/v1/fuels', (req, res) => {
   database('fuel_types').select()
   .then( fuels => {
@@ -27,7 +90,6 @@ app.get('/api/v1/fuels', (req, res) => {
   });
 });
 
-// GET /api/v1/fuels/:fuel_type_code
 app.get('/api/v1/stations/fuels/:fuel_type_code', (req, res) => {
   database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).select()
   .then( fuel => {
@@ -53,7 +115,6 @@ app.get('/api/v1/stations/fuels/:fuel_type_code', (req, res) => {
   });
 });
 
-// GET /api/v1/stations
 app.get('/api/v1/stations', (req, res) => {
   database('fuel_stations').select()
   .then( stations => {
@@ -67,7 +128,6 @@ app.get('/api/v1/stations', (req, res) => {
   });
 });
 
-// GET /api/v1/stations/:id
 app.get('/api/v1/stations/:station_code', (req, res) => {
   database('fuel_stations').where('station_code', req.params.station_code).select()
   .then( station => {
@@ -84,14 +144,7 @@ app.get('/api/v1/stations/:station_code', (req, res) => {
   });
 });
 
-// GET /api/v1/stations/:fuel
-
-
-// GET /api/v1/stations/:zip
-
-// 2 POST
-// POST /api/v1/stations
-app.post('/api/v1/stations', (req, res) => {
+app.post('/api/v1/stations', checkAuth, (req, res) => {
   for (let requiredParam of ['station_code', 'station_name', 'zip', 'state', 'city', 'street_address', 'latitude', 'longitude', 'geocode_status','fuel_type_code']) {
     if (!req.body[requiredParam]) {
       return res.status(422).json({
@@ -113,6 +166,7 @@ app.post('/api/v1/stations', (req, res) => {
     };
   };
 
+  delete req.body.token
   database('fuel_types').where('fuel_type_code', req.body.fuel_type_code).select()
   .then( fuel => {
     if(fuel.length) {
@@ -137,8 +191,7 @@ app.post('/api/v1/stations', (req, res) => {
 
 });
 
-// POST /api/v1/fuel
-app.post('/api/v1/fuels', (req, res) => {
+app.post('/api/v1/fuels', checkAuth, (req, res) => {
   for (let requiredParam of ['fuel_type_code', 'fuel_type']) {
     if (!req.body[requiredParam]) {
       return res.status(422).json({
@@ -146,7 +199,7 @@ app.post('/api/v1/fuels', (req, res) => {
       });
     };
   };
-
+  delete req.body.token
   database('fuel_types').insert(req.body, 'id')
   .then(fuel => {
     res.status(201).json({ id: fuel[0] });
@@ -156,29 +209,56 @@ app.post('/api/v1/fuels', (req, res) => {
   });
 });
 
-// 2 PUT/PATCH
-// PUT /api/v1/fuels/count
-app.patch('/api/v1/fuels/:fuel_type_code/:count', (req, res) => {
-  let fuelTypeCode = req.params.fuel_type_code;
-  let count = req.params.count;
-  database('fuel_types').where('fuel_type_code', fuelTypeCode).update('count', count)
-  .then(qtyItemsPatched => {
-    res.status(201).json({ response: `Count successfully updated for ${fuelTypeCode}`});
+app.patch('/api/v1/fuels/:fuel_type_code/count/:count', checkAuth, (req, res) => {
+  database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).select()
+  .then( fuel => {
+    if(!fuel.length) {
+      return res.status(404).json({
+        error: `Could not locate fuel with fuel_type_code ${req.params.fuel_type_code}`
+      })
+    } else {
+      database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).update('count', req.params.count)
+      .then(qtyItemsPatched => {
+        if (qtyItemsPatched) {
+          res.status(201).json({ response: `Count successfully updated for ${req.params.fuel_type_code}`});
+        } else {
+          res.status()
+        };
+      });
+    };
   })
   .catch( error => {
-    res.status(500).json({ error })
+    res.status(500).json({ error });
   });
 });
 
+app.patch('/api/v1/stations/:station_code/latitude/:new_lat', checkAuth, (req, res) => {
+  database('fuel_stations').where('station_code', req.params.station_code).select()
+  .then( station => {
+    if(!station.length) {
+      return res.status(404).json({
+        error: `Could not locate station with station_code ${req.params.station_code}`
+      })
+    } else {
+      database('fuel_stations').where('station_code', req.params.station_code).update('latitude', req.params.new_lat)
+      .then(qtyItemsPatched => {
+        if (qtyItemsPatched) {
+          res.status(201).json({ response: `Latitude successfully updated for station ${req.params.station_code}`});
+        } else {
+          res.status()
+        };
+      });
+    };
+  })
+  .catch( error => {
+    res.status(500).json({ error });
+  });
+});
 
-// PATCH /api/v1/
-
-// 2 DELETE
-// DELETE /api/v1/stations
-app.delete('/api/v1/stations/:station_code', (req, res) => {
+app.delete('/api/v1/stations/:station_code', checkAuth, (req, res) => {
   database('fuel_stations').where('station_code', req.params.station_code).del()
   .then( qtyRowDel => {
-    if (qtyRowDel === 1) {
+    if (qtyRowDel) {
       res.status(204).json({rowsDel: qtyRowDel});
     } else {
       res.status(404).json({
@@ -192,7 +272,30 @@ app.delete('/api/v1/stations/:station_code', (req, res) => {
 
 })
 
-// DELETE /api/v1/fuel
+app.delete('/api/v1/stations/fuels/:fuel_type_code', checkAuth, (req, res) => {
+  database('fuel_types').where('fuel_type_code', req.params.fuel_type_code).select()
+  .then( fuel => {
+    if(fuel.length) {
+      database('fuel_stations').where('fuel_type_id', fuel[0].id).del()
+      .then( qtyRowDel => {
+        if(qtyRowDel) {
+          res.status(204).json({ rowDel: qtyRowDel });
+        } else {
+          res.status(404).json({
+            error: `Could not locate any stations with fuel code ${req.params.fuel_type_code}`
+          });
+        };
+      });
+    } else {
+      res.status(404).json({
+        error: `Could not locate fuel with code ${req.params.fuel_type_code}`
+      });
+    };
+  })
+  .catch( error => {
+    res.status(500).json({ error })
+  });
+})
 
 
 if (!module.parent) {
