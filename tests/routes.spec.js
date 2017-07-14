@@ -337,7 +337,8 @@ describe('API Routes', () => {
         .delete('/api/v1/stations/48463')
         .send({token: jwtToken})
         .end((err, res) => {
-          res.should.have.status(204);
+          res.should.have.status(200);
+          res.body.success.should.equal('Entry for station 48463 successfully deleted')
           chai.request(server)
           .get('/api/v1/stations/48463')
           .end((err, res) => {
@@ -371,7 +372,8 @@ describe('API Routes', () => {
         .delete('/api/v1/stations/fuels/ELEC')
         .send({token: jwtToken})
         .end((err, res) => {
-          res.should.have.status(204);
+          res.should.have.status(200);
+          res.body.success.should.equal('Successfully deleted 2 stations(s) corresponding to the fuel_type_code ELEC')
           chai.request(server)
           .get('/api/v1/stations/fuels/ELEC')
           .end((err, res) => {

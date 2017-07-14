@@ -259,7 +259,7 @@ app.delete('/api/v1/stations/:station_code', checkAuth, (req, res) => {
   database('fuel_stations').where('station_code', req.params.station_code).del()
   .then( qtyRowDel => {
     if (qtyRowDel) {
-      res.status(204).json({rowsDel: qtyRowDel});
+      res.status(200).json({success: `Entry for station ${req.params.station_code} successfully deleted`});
     } else {
       res.status(404).json({
         error: `Could not locate station with code ${req.params.station_code}`
@@ -279,7 +279,7 @@ app.delete('/api/v1/stations/fuels/:fuel_type_code', checkAuth, (req, res) => {
       database('fuel_stations').where('fuel_type_id', fuel[0].id).del()
       .then( qtyRowDel => {
         if (qtyRowDel) {
-          res.status(204).json({ rowDel: qtyRowDel });
+          res.status(200).json({success: `Successfully deleted ${qtyRowDel} stations(s) corresponding to the fuel_type_code ${req.params.fuel_type_code}`});
         } else {
           res.status(404).json({
             error: `Could not locate any stations with fuel code ${req.params.fuel_type_code}`
