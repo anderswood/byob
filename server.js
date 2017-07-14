@@ -22,14 +22,14 @@ app.set('port', process.env.PORT || 3000);
 ///////////////////////////////
 
 app.set('secretKey', process.env.CLIENT_SECRET);
-if (!process.env.CLIENT_SECRET || !config.USERNAME || !config.PASSWORD) {
+if (!process.env.CLIENT_SECRET || !process.env.USERNAME || !process.env.PASSWORD) {
   throw 'Make sure you have a CLIENT_SECRET, USERNAME, and PASSWORD in your .env file'
 }
 
 app.post('/authenticate', (req, res) => {
   const user = req.body;
 
-  if (user.username !== config.USERNAME || user.password !== config.PASSWORD) {
+  if (user.username !== process.env.USERNAME || user.password !== process.env.PASSWORD) {
     res.status(403).send({
       success: false,
       message: 'Invalid Credentials'
