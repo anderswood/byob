@@ -1,7 +1,7 @@
 ## Resources
-[NREL data source](https://developer.nrel.gov/docs/transportation/alt-fuel-stations-v1/all/): alternative fuel stations for the state of Maine.
-[NREL data API](https://developer.nrel.gov/api/alt-fuel-stations/v1.json?<api_key>&state=ME)
-[Live App on Heroku](https://byob-notbeer.herokuapp.com/)
+* [NREL data source](https://developer.nrel.gov/docs/transportation/alt-fuel-stations-v1/all/): alternative fuel stations for the state of Maine.
+* [NREL data API](https://developer.nrel.gov/api/alt-fuel-stations/v1.json?<api_key>&state=ME)
+* [Live App on Heroku](https://byob-notbeer.herokuapp.com/)
 
 ## API Authorization
  **token: (expires 7/13/18)** eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImZvbyIsInBhc3N3b3JkIjoiYmFoIiwiaWF0IjoxNDk5OTgzNDA5LCJleHAiOjE1MzE1MjM0MDl9.Ca9lm4etzohrzMLwpvA5Krx-CSme-500g9sssVpES6A
@@ -29,6 +29,18 @@ LPG: 'Liquefied Petroleum Gas (Propane)'
 
 GET **/api/v1/stations**
 * Retrieves all records from the 'fuel_stations' table
+* Custom queries: filter on any one column in the station table, e.g. `/api/v1/stations/?city=Bar%20Harbor` returns all stations in Bar Harbor, and `/api/v1/stations/?zip=04330` returns all stations at zip code 04330. Column headings and example data points for reference:
+```
+station_code: 41733,
+station_name: "Veterans Affairs - Maine Healthcare System - Togus",
+zip: '04330',
+state: 'ME',
+city: "Augusta",
+street_address: "1 VA Center",
+latitude: '44.296869',
+longitude: '-69.724097',
+geocode_status: "GPS"
+```
 
 GET **/api/v1/stations/:station_code**
 * Retrieves all records matching the supplied station_code
