@@ -9,8 +9,9 @@ const environment = process.env.NODE_ENV || 'development';
 const configuration = require('../knexfile')[environment];
 const database = require('knex')(configuration);
 
-
 chai.use(chaiHttp);
+
+const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImZvbyIsInBhc3N3b3JkIjoiYmFoIiwiaWF0IjoxNDk5OTgzNDA5LCJleHAiOjE1MzE1MjM0MDl9.Ca9lm4etzohrzMLwpvA5Krx-CSme-500g9sssVpES6A';
 
 describe('Client Routes', () => {
 
@@ -184,7 +185,8 @@ describe('API Routes', () => {
       latitude: '54.800429',
       longitude: '-67.853698',
       geocode_status: "GPS",
-      fuel_type_code: 'CNG'
+      fuel_type_code: 'CNG',
+      token: jwtToken
     }
 
     it('should create a new station', done => {
@@ -223,7 +225,8 @@ describe('API Routes', () => {
         latitude: '54.800429',
         longitude: '-67.853698',
         geocode_status: "GPS",
-        fuel_type_code: 'ZZ'
+        fuel_type_code: 'ZZ',
+        token: jwtToken
       }
 
       chai.request(server)
@@ -246,7 +249,8 @@ describe('API Routes', () => {
         id: 18,
         fuel_type_code: 'LM',
         count: 0,
-        fuel_type: 'liquid magma'
+        fuel_type: 'liquid magma',
+        token: jwtToken
       })
       .end((err, res) => {
         res.should.have.status(201);
@@ -263,7 +267,8 @@ describe('API Routes', () => {
       .send({
         id: 18,
         fuel_type_code: 'LM',
-        count: 0
+        count: 0,
+        token: jwtToken
       })
       .end((err, res) => {
         res.should.have.status(422);
@@ -273,19 +278,80 @@ describe('API Routes', () => {
     });
   });
 
-  describe('DELETE /api/v1/stations/station_code', () => {
+  describe('PATCH /api/v1/fuels/:fuel_type_code/count/:count', () => {
+    it('should patch the station count to the fuel specified', done => {
+      chai.request(server)
+      .patch('/api/v1/fuels/HY/count/2')
+      .send({token: jwtToken})
+      .end((err, res) => {
+        res.should.have.status(201);
+        res.body.response.should.equal('Count successfully updated for HY');
+        done();
+      });
+    });
+
+    it('should not patch the station count to the fuel if the fuel_type_code is invalid', done => {
+      chai.request(server)
+      .patch('/api/v1/fuels/PLUT/count/3')
+      .send({token: jwtToken})
+      .end((err, res) => {
+        res.should.have.status(404);
+        res.body.error.should.equal('Could not locate fuel with fuel_type_code PLUT');
+        done();
+      });
+    });
+
+  });
+
+  describe('PATCH /api/v1/stations/:station_code/latitude/:new_lat', () => {
+    it('should patch the station latitude to the station specified', done => {
+      chai.request(server)
+      .patch('/api/v1/stations/61679/latitude/-33.3333')
+      .send({token: jwtToken})
+      .end((err, res) => {
+        res.should.have.status(201);
+        res.body.response.should.equal('Latitude successfully updated for station 61679');
+        done();
+      });
+    });
+
+    it('should not patch the station latitude if the station_code is invalid', done => {
+      chai.request(server)
+      .patch('/api/v1/stations/123/latitude/-33.3333')
+      .send({token: jwtToken})
+      .end((err, res) => {
+        res.should.have.status(404);
+        res.body.error.should.equal('Could not locate station with station_code 123');
+        done();
+      });
+    });
+  });
+
+  describe('DELETE /api/v1/stations/:station_code', () => {
     it('should delete the station', done => {
       chai.request(server)
-      .delete('/api/v1/stations/48463')
+      .get('/api/v1/stations/48463')
       .end((err, res) => {
-        res.should.have.status(204);
-        done();
+        res.should.have.status(200);
+        chai.request(server)
+        .delete('/api/v1/stations/48463')
+        .send({token: jwtToken})
+        .end((err, res) => {
+          res.should.have.status(204);
+          chai.request(server)
+          .get('/api/v1/stations/48463')
+          .end((err, res) => {
+            res.should.have.status(404);
+            done();
+          });
+        });
       });
     });
 
     it('should not delete the station if the station code is invalid', done => {
       chai.request(server)
       .delete('/api/v1/stations/10000000')
+      .send({token: jwtToken})
       .end((err, res) => {
         res.should.have.status(404);
         res.body.error.should.equal('Could not locate station with code 10000000');
@@ -294,28 +360,49 @@ describe('API Routes', () => {
     });
   });
 
-  describe('PATCH /api/v1/fuels/:fuel_type_code/:count', () => {
-    it('should patch the station count to the fuel specified', done => {
+  describe('DELETE /api/v1/stations/fuels/:fuel_type_code', () => {
+    it('should delete all stations associated with the provided fuel type code', done => {
       chai.request(server)
-      .patch('/api/v1/fuels/HY/2')
+      .get('/api/v1/stations/fuels/ELEC')
       .end((err, res) => {
-        res.should.have.status(201);
-        res.body.response.should.equal('Count successfully updated for HY');
+        res.should.have.status(200);
+        res.body.length.should.equal(2);
+        chai.request(server)
+        .delete('/api/v1/stations/fuels/ELEC')
+        .send({token: jwtToken})
+        .end((err, res) => {
+          res.should.have.status(204);
+          chai.request(server)
+          .get('/api/v1/stations/fuels/ELEC')
+          .end((err, res) => {
+            res.should.have.status(404);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should return 404 if there are no stations matching that fuel type', done => {
+      chai.request(server)
+      .delete('/api/v1/stations/fuels/LNG')
+      .send({token: jwtToken})
+      .end((err, res) => {
+        res.should.have.status(404);
+        res.body.error.should.equal('Could not locate any stations with fuel code LNG');
         done();
       });
     });
 
-    // it('should not patch the station count to the fuel if the fuel_type_code is invalid', done => {
-    //   chai.request(server)
-    //   .patch('/api/v1/fuels/HY/2')
-    //   .end((err, res) => {
-    //     res.should.have.status(201);
-    //     console.log(res.body);
-    //     // res.body..status()
-    //     done();
-    //   });
-    // });
-
+    it('should not delete the station if the fuel code is invalid', done => {
+      chai.request(server)
+      .delete('/api/v1/stations/fuels/Pluto')
+      .send({token: jwtToken})
+      .end((err, res) => {
+        res.should.have.status(404);
+        res.body.error.should.equal('Could not locate fuel with code Pluto');
+        done();
+      });
+    });
   });
 
 });
